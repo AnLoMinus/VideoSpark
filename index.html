@@ -190,6 +190,7 @@
       justify-content: space-between;
       align-items: center;
       gap: 10px;
+      flex-wrap: wrap;
     }
 
     .visualizer-header h2 {
@@ -211,13 +212,30 @@
       opacity: 0.9;
     }
 
+    .visualizer-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .view-size-select {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(5, 5, 20, 0.6);
+      color: var(--text-soft);
+      font-size: 0.78rem;
+      padding: 5px 12px;
+    }
+
     .visualizer-stage {
       position: relative;
       border-radius: 20px;
       overflow: hidden;
       margin-top: 4px;
-      flex: 1;
-      min-height: 260px;
+      flex: 0 0 auto;
+      height: var(--visualizer-height, 420px);
+      min-height: 240px;
       background:
         radial-gradient(circle at top, rgba(127, 91, 255, 0.35), transparent 55%),
         radial-gradient(circle at bottom, rgba(51, 232, 255, 0.12), transparent 55%),
@@ -225,10 +243,29 @@
       border: 1px solid rgba(255, 255, 255, 0.12);
     }
 
+    .visualizer-stage.size-full {
+      --visualizer-height: 520px;
+    }
+
+    .visualizer-stage.size-half {
+      --visualizer-height: 420px;
+    }
+
+    .visualizer-stage.size-quarter {
+      --visualizer-height: 320px;
+    }
+
+    .visualizer-stage.size-small {
+      --visualizer-height: 240px;
+    }
+
     #visualizerCanvas {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
       display: block;
+      z-index: 1;
     }
 
     .bg-image-layer {
@@ -238,6 +275,7 @@
       pointer-events: none;
       opacity: 0.48;
       mix-blend-mode: screen;
+      z-index: 0;
     }
 
     .bg-image-layer img {
@@ -258,6 +296,7 @@
       text-shadow:
         0 0 14px rgba(0, 0, 0, 0.9),
         0 0 26px rgba(0, 0, 0, 0.9);
+      z-index: 2;
     }
 
     .lyrics-line-current {
@@ -565,13 +604,22 @@
               <h2 id="visualizerTitle">🎛️ Live Visualizer</h2>
               <span class="sub" id="visualizerSub">Drop your track · Watch the bars ignite</span>
             </div>
-            <div class="theme-indicator">
-              <span id="themeIndicatorLabel">Theme:</span>
-              <span id="currentThemeLabel">Ultra SparKing Ascension</span>
+            <div class="visualizer-header-actions">
+              <div class="theme-indicator">
+                <span id="themeIndicatorLabel">Theme:</span>
+                <span id="currentThemeLabel">Ultra SparKing Ascension</span>
+              </div>
+              <label class="theme-indicator" for="displaySizeSelect" id="displaySizeLabel">View:</label>
+              <select id="displaySizeSelect" class="view-size-select">
+                <option value="full">Full view</option>
+                <option value="half">Half view</option>
+                <option value="quarter">Quarter view</option>
+                <option value="small">Mini view</option>
+              </select>
             </div>
           </div>
 
-          <div class="visualizer-stage">
+          <div class="visualizer-stage size-half">
             <canvas id="visualizerCanvas"></canvas>
             <div class="bg-image-layer">
               <img id="bgImagePreview" alt="Background artwork" />
@@ -758,6 +806,9 @@
       const visualizerTitle = document.getElementById("visualizerTitle");
       const visualizerSub = document.getElementById("visualizerSub");
       const themeIndicatorLabel = document.getElementById("themeIndicatorLabel");
+      const displaySizeLabel = document.getElementById("displaySizeLabel");
+      const displaySizeSelect = document.getElementById("displaySizeSelect");
+      const visualizerStage = document.querySelector(".visualizer-stage");
 
       const audioLabel = document.getElementById("audioLabel");
       const audioHint = document.getElementById("audioHint");
@@ -804,6 +855,13 @@
           visualizerTitle: "🎛️ Live Visualizer",
           visualizerSub: "Drop your track · Watch the bars ignite",
           themeIndicator: "Theme:",
+          displaySizeLabel: "View:",
+          displaySizeOptions: {
+            full: "Full view",
+            half: "Half view",
+            quarter: "Quarter view",
+            small: "Mini view"
+          },
           overlayDefault: "Load audio · Add lyrics · Hit Play",
           overlayNextHint: "",
           sampleRatePrefix: "Sample rate: ",
@@ -863,6 +921,13 @@
           visualizerTitle: "🎛️ ויזואלייזר חי",
           visualizerSub: "זרקו קובץ – תראו את הבר נצנץ",
           themeIndicator: "ערכת נושא:",
+          displaySizeLabel: "תצוגה:",
+          displaySizeOptions: {
+            full: "מסך מלא",
+            half: "חצי מסך",
+            quarter: "רבע מסך",
+            small: "מסך קטן"
+          },
           overlayDefault: "טענו אודיו · הוסיפו מילים · לחצו פליי",
           overlayNextHint: "",
           sampleRatePrefix: "קצב דגימה: ",
@@ -975,6 +1040,7 @@
         visualizerTitle.textContent = t("visualizerTitle");
         visualizerSub.textContent = t("visualizerSub");
         themeIndicatorLabel.textContent = t("themeIndicator");
+        displaySizeLabel.textContent = t("displaySizeLabel");
 
         audioLabel.textContent = t("audioLabel");
         audioHint.textContent = t("audioHint");
@@ -1010,6 +1076,10 @@
         Array.from(themeSelect.options).forEach(function (option) {
           option.textContent = getThemeLabel(option.value);
         });
+        Array.from(displaySizeSelect.options).forEach(function (option) {
+          const viewLabels = (translations[currentLang] || translations.en).displaySizeOptions || translations.en.displaySizeOptions;
+          option.textContent = viewLabels[option.value] || option.textContent;
+        });
         const selectedOption = themeSelect.value;
         currentThemeLabel.textContent = getThemeLabel(selectedOption);
 
@@ -1035,6 +1105,7 @@
 
       languageSelect.value = currentLang;
       applyLanguage();
+      applyDisplaySize(displaySizeSelect.value || "half");
 
       function resizeCanvas() {
         const rect = canvas.parentElement.getBoundingClientRect();
@@ -1043,6 +1114,19 @@
         canvas.width = Math.floor(rect.width * scale);
         canvas.height = Math.floor(rect.height * scale);
         ctx.setTransform(scale, 0, 0, scale, 0, 0);
+      }
+
+      function applyDisplaySize(sizeKey) {
+        const allowed = ["full", "half", "quarter", "small"];
+        const chosen = allowed.indexOf(sizeKey) !== -1 ? sizeKey : "half";
+        allowed.forEach(function (key) {
+          visualizerStage.classList.remove("size-" + key);
+        });
+        visualizerStage.classList.add("size-" + chosen);
+        if (displaySizeSelect.value !== chosen) {
+          displaySizeSelect.value = chosen;
+        }
+        resizeCanvas();
       }
 
       window.addEventListener("resize", resizeCanvas);
@@ -1422,6 +1506,10 @@
       themeSelect.addEventListener("change", function () {
         const label = themeSelect.options[themeSelect.selectedIndex].textContent;
         currentThemeLabel.textContent = label;
+      });
+
+      displaySizeSelect.addEventListener("change", function () {
+        applyDisplaySize(displaySizeSelect.value);
       });
 
       reloadLyricsButton.addEventListener("click", function () {
