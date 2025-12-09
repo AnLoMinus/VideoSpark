@@ -5,1561 +5,185 @@
   <title>VideoSpark – Audio Visualizer & Lyrics</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="VideoSpark – Audio visualizer with themes, lyrics sync and background image. Created by AnLoMinus (SparKing Leon Yaakobov)." />
-  <style>
-    :root {
-      --bg-main: #050510;
-      --bg-panel: #0b0b1a;
-      --bg-panel-soft: #101025;
-      --accent-1: #ffdd55;
-      --accent-2: #7f5bff;
-      --accent-3: #33e8ff;
-      --accent-danger: #ff3366;
-      --text-main: #f5f5ff;
-      --text-soft: #c0c0dd;
-      --border-soft: rgba(255, 255, 255, 0.12);
-      --radius-lg: 18px;
-      --radius-md: 10px;
-      --shadow-soft: 0 0 45px rgba(0, 0, 0, 0.7);
-      --shadow-strong: 0 0 80px rgba(0, 0, 0, 0.95);
-      --transition-fast: 0.18s ease-out;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      min-height: 100vh;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-        sans-serif;
-      background: radial-gradient(circle at top, #1d1640 0, #050510 55%, #020206 100%);
-      color: var(--text-main);
-      display: flex;
-      align-items: stretch;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .app-shell {
-      max-width: 1280px;
-      width: 100%;
-      background: radial-gradient(circle at top left, #1e1038 0, #050510 48%, #020207 100%);
-      border-radius: 26px;
-      box-shadow: var(--shadow-strong);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      padding: 20px 22px 22px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* Subtle cosmic noise overlay */
-    .app-shell::before {
-      content: "";
-      position: absolute;
-      inset: -40%;
-      pointer-events: none;
-      opacity: 0.7;
-      background-image:
-        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.08) 0, transparent 40%),
-        radial-gradient(circle at 80% 10%, rgba(127, 91, 255, 0.22) 0, transparent 55%),
-        radial-gradient(circle at 15% 85%, rgba(51, 232, 255, 0.16) 0, transparent 50%);
-      mix-blend-mode: screen;
-      filter: blur(4px);
-      z-index: 0;
-    }
-
-    .app-shell-inner {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      height: 100%;
-    }
-
-    header.app-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .brand-block {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .brand-title {
-      font-size: 1.6rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .brand-pill {
-      font-size: 0.8rem;
-      padding: 3px 9px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      background: linear-gradient(120deg, rgba(255, 221, 85, 0.06), rgba(127, 91, 255, 0.15));
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--text-soft);
-    }
-
-    .brand-sub {
-      font-size: 0.86rem;
-      color: var(--text-soft);
-    }
-
-    .header-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: flex-end;
-      align-items: center;
-    }
-
-    .tag-badge {
-      font-size: 0.7rem;
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      color: var(--text-soft);
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      white-space: nowrap;
-    }
-
-    .tag-badge.primary {
-      border-color: rgba(255, 221, 85, 0.8);
-      color: #ffef99;
-      background: radial-gradient(circle at 20% 0, rgba(255, 221, 85, 0.25), transparent 55%);
-    }
-
-    .language-select {
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      background: rgba(5, 5, 20, 0.6);
-      color: var(--text-soft);
-      font-size: 0.78rem;
-      padding: 4px 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    /* Layout main area */
-    .main-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 3fr) minmax(0, 2.2fr);
-      gap: 16px;
-      min-height: 420px;
-    }
-
-    @media (max-width: 920px) {
-      .main-layout {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-
-    /* Left side – Visualizer */
-    .visualizer-panel {
-      background: linear-gradient(145deg, rgba(10, 10, 30, 0.96), rgba(5, 5, 22, 0.98));
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-soft);
-      border: 1px solid var(--border-soft);
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .visualizer-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .visualizer-header h2 {
-      font-size: 1.05rem;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-weight: 600;
-    }
-
-    .visualizer-header span.sub {
-      font-size: 0.8rem;
-      color: var(--text-soft);
-    }
-
-    .theme-indicator {
-      font-size: 0.8rem;
-      color: var(--accent-3);
-      opacity: 0.9;
-    }
-
-    .visualizer-header-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .view-size-select {
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      background: rgba(5, 5, 20, 0.6);
-      color: var(--text-soft);
-      font-size: 0.78rem;
-      padding: 5px 12px;
-    }
-
-    .visualizer-stage {
-      position: relative;
-      border-radius: 20px;
-      overflow: hidden;
-      margin-top: 4px;
-      flex: 0 0 auto;
-      height: var(--visualizer-height, 420px);
-      min-height: 240px;
-      background:
-        radial-gradient(circle at top, rgba(127, 91, 255, 0.35), transparent 55%),
-        radial-gradient(circle at bottom, rgba(51, 232, 255, 0.12), transparent 55%),
-        #050512;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-    }
-
-    .visualizer-stage.size-full {
-      --visualizer-height: 520px;
-    }
-
-    .visualizer-stage.size-half {
-      --visualizer-height: 420px;
-    }
-
-    .visualizer-stage.size-quarter {
-      --visualizer-height: 320px;
-    }
-
-    .visualizer-stage.size-small {
-      --visualizer-height: 240px;
-    }
-
-    #visualizerCanvas {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      display: block;
-      z-index: 1;
-    }
-
-    .bg-image-layer {
-      position: absolute;
-      inset: 0;
-      overflow: hidden;
-      pointer-events: none;
-      opacity: 0.48;
-      mix-blend-mode: screen;
-      z-index: 0;
-    }
-
-    .bg-image-layer img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      filter: saturate(1.15) contrast(1.05) brightness(0.95);
-    }
-
-    .lyrics-overlay {
-      position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 16px;
-      padding: 0 20px;
-      text-align: center;
-      pointer-events: none;
-      text-shadow:
-        0 0 14px rgba(0, 0, 0, 0.9),
-        0 0 26px rgba(0, 0, 0, 0.9);
-      z-index: 2;
-    }
-
-    .lyrics-line-current {
-      font-size: 1rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: #fffaf1;
-      padding: 5px 16px;
-      border-radius: 999px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle at top, rgba(255, 221, 85, 0.96), rgba(255, 131, 65, 0.9));
-      box-shadow:
-        0 0 20px rgba(255, 221, 85, 0.75),
-        0 0 60px rgba(255, 131, 65, 0.7);
-      white-space: pre-wrap;
-      max-width: 100%;
-    }
-
-    .lyrics-line-next {
-      margin-top: 6px;
-      font-size: 0.82rem;
-      color: rgba(245, 245, 255, 0.78);
-    }
-
-    .status-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      font-size: 0.8rem;
-      margin-top: 4px;
-      color: var(--text-soft);
-    }
-
-    .status-group {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: #ff3366;
-      box-shadow: 0 0 12px rgba(255, 51, 102, 0.6);
-    }
-
-    .status-dot.playing {
-      background: #33ff99;
-      box-shadow: 0 0 12px rgba(51, 255, 153, 0.7);
-    }
-
-    .status-chip {
-      padding: 3px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      background: rgba(5, 5, 30, 0.9);
-    }
-
-    /* Right side – Controls */
-    .controls-panel {
-      background: radial-gradient(circle at top right, #1a1630 0, #080817 58%, #050510 100%);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-soft);
-      border: 1px solid var(--border-soft);
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .controls-panel h2 {
-      font-size: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-weight: 600;
-    }
-
-    .control-row {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-top: 4px;
-    }
-
-    .control-label {
-      font-size: 0.85rem;
-      color: var(--text-soft);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .control-label span.hint {
-      font-size: 0.75rem;
-      color: rgba(192, 192, 221, 0.75);
-    }
-
-    .file-input-wrapper {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 8px;
-    }
-
-    .file-input-wrapper input[type="file"] {
-      display: none;
-    }
-
-    .button {
-      appearance: none;
-      border: none;
-      outline: none;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 600;
-      padding: 7px 14px;
-      border-radius: 999px;
-      background: radial-gradient(circle at top left, #ffdd55 0, #ff8135 38%, #ff3366 100%);
-      color: #140814;
-      box-shadow:
-        0 0 10px rgba(255, 221, 85, 0.75),
-        0 0 26px rgba(255, 99, 71, 0.9);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter var(--transition-fast);
-      white-space: nowrap;
-    }
-
-    .button:hover {
-      transform: translateY(-1px) scale(1.02);
-      filter: brightness(1.05);
-      box-shadow:
-        0 0 18px rgba(255, 221, 85, 0.9),
-        0 0 38px rgba(255, 99, 71, 0.95);
-    }
-
-    .button.secondary {
-      background: linear-gradient(135deg, rgba(127, 91, 255, 0.16), rgba(21, 197, 255, 0.18));
-      color: #f5f5ff;
-      border: 1px solid rgba(127, 191, 255, 0.8);
-      box-shadow: 0 0 16px rgba(127, 159, 255, 0.45);
-    }
-
-    .button.secondary:hover {
-      box-shadow: 0 0 24px rgba(127, 191, 255, 0.85);
-    }
-
-    .button.icon-only {
-      padding-inline: 10px;
-    }
-
-    select,
-    textarea,
-    input[type="text"],
-    input[type="number"] {
-      width: 100%;
-      border-radius: var(--radius-md);
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      background: rgba(6, 6, 28, 0.92);
-      color: var(--text-main);
-      padding: 7px 10px;
-      font-size: 0.84rem;
-      outline: none;
-      box-shadow: inset 0 0 0 rgba(0, 0, 0, 0);
-      transition: border-color 0.16s ease-out, box-shadow 0.16s ease-out, background 0.16s ease-out;
-    }
-
-    select:focus,
-    textarea:focus,
-    input[type="text"]:focus,
-    input[type="number"]:focus {
-      border-color: rgba(255, 221, 85, 0.9);
-      box-shadow: 0 0 0 1px rgba(255, 221, 85, 0.5);
-      background: rgba(9, 9, 35, 0.98);
-    }
-
-    textarea {
-      resize: vertical;
-      min-height: 90px;
-      max-height: 200px;
-      line-height: 1.4;
-    }
-
-    .split-row {
-      display: grid;
-      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-      gap: 8px;
-    }
-
-    @media (max-width: 600px) {
-      .split-row {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-
-    .small-text {
-      font-size: 0.75rem;
-      color: rgba(192, 192, 221, 0.78);
-    }
-
-    .chips-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 5px;
-    }
-
-    .mini-chip {
-      font-size: 0.73rem;
-      padding: 3px 7px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      color: var(--text-soft);
-    }
-
-    footer.app-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.78rem;
-      color: var(--text-soft);
-      margin-top: 3px;
-      padding-top: 8px;
-      border-top: 1px solid rgba(255, 255, 255, 0.14);
-    }
-
-    .footer-right {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: flex-end;
-    }
-
-    a.footer-link {
-      color: #b0d4ff;
-      text-decoration: none;
-      border-bottom: 1px dotted rgba(176, 212, 255, 0.6);
-    }
-
-    a.footer-link:hover {
-      color: #e0f0ff;
-      border-bottom-style: solid;
-    }
-
-    /* Mobile tweaks */
-    @media (max-width: 720px) {
-      .app-shell {
-        padding: 14px 12px 16px;
-        border-radius: 20px;
-      }
-
-      header.app-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .header-actions {
-        justify-content: flex-start;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div class="app-shell">
+  <a class="skip-link" href="#mainContent">Skip to content</a>
+  <div class="app-shell" role="application" aria-label="VideoSpark visualizer">
     <div class="app-shell-inner">
       <header class="app-header">
         <div class="brand-block">
-          <div class="brand-title">
+          <div class="brand-title" aria-label="VideoSpark">
             <span>VideoSpark</span>
-            <span style="font-size:0.95rem;color:#ffdd88;">VS</span>
-            <span class="brand-pill" id="brandPill">Audio · Visual · Lyrics</span>
+            <span class="tag-badge primary" id="versionTag" aria-live="polite"></span>
           </div>
-          <div class="brand-sub" id="brandSub">
-            Reactive equalizer · Cosmic themes · Lyrics-on-beat
-          </div>
+          <p class="brand-pill" id="brandPill"></p>
+          <p class="brand-sub" id="brandSub"></p>
         </div>
-        <div class="header-actions">
-          <div class="tag-badge primary" id="badgeMode">HacKing-DJ Mode</div>
-          <div class="tag-badge" id="badgeSync">Ultra Visual Sync</div>
-          <div class="tag-badge" id="badgeAuthor">Made by AnLoMinus</div>
-          <div class="tag-badge" id="versionTag">Version</div>
-          <select id="languageSelect" class="language-select" aria-label="Language switcher">
-            <option value="en">EN</option>
-            <option value="he">עב</option>
+        <div class="header-actions" aria-label="Application meta">
+          <span class="tag-badge" id="badgeMode"></span>
+          <span class="tag-badge" id="badgeSync"></span>
+          <span class="tag-badge" id="badgeAuthor"></span>
+          <label class="sr-only" for="languageSelect">Language</label>
+          <select id="languageSelect" class="language-select" aria-describedby="languageHelp">
+            <option value="en">English</option>
+            <option value="he">עברית</option>
           </select>
+          <span id="languageHelp" class="sr-only">Change interface language</span>
         </div>
       </header>
 
-      <div class="main-layout">
-        <!-- LEFT: VISUALIZER -->
-        <section class="visualizer-panel" aria-label="Visualizer panel">
+      <main id="mainContent" class="main-layout" aria-label="Visualizer and controls">
+        <section class="visualizer-panel" aria-labelledby="visualizerTitle">
           <div class="visualizer-header">
             <div>
               <h2 id="visualizerTitle">🎛️ Live Visualizer</h2>
-              <span class="sub" id="visualizerSub">Drop your track · Watch the bars ignite</span>
+              <span class="sub" id="visualizerSub"></span>
             </div>
             <div class="visualizer-header-actions">
-              <div class="theme-indicator">
-                <span id="themeIndicatorLabel">Theme:</span>
-                <span id="currentThemeLabel">Ultra SparKing Ascension</span>
+              <div class="theme-indicator" aria-live="polite">
+                <span id="themeIndicatorLabel"></span>
+                <span id="currentThemeLabel"></span>
               </div>
-              <label class="theme-indicator" for="displaySizeSelect" id="displaySizeLabel">View:</label>
-              <select id="displaySizeSelect" class="view-size-select">
+              <label class="sr-only" for="displaySizeSelect" id="displaySizeLabel">View size</label>
+              <select id="displaySizeSelect" class="view-size-select" aria-describedby="displaySizeHelp">
                 <option value="full">Full view</option>
                 <option value="half">Half view</option>
                 <option value="quarter">Quarter view</option>
                 <option value="small">Mini view</option>
               </select>
+              <span id="displaySizeHelp" class="sr-only">Change stage size</span>
             </div>
           </div>
 
-          <div class="visualizer-stage size-half">
-            <canvas id="visualizerCanvas"></canvas>
-            <div class="bg-image-layer">
-              <img id="bgImagePreview" alt="Background artwork" />
+          <div class="visualizer-stage size-full" role="region" aria-label="Audio visualizer">
+            <canvas id="visualizerCanvas" role="img" aria-live="off" aria-label="Audio frequency bars"></canvas>
+            <div class="bg-image-layer" aria-hidden="true">
+              <img id="bgImagePreview" src="" alt="Background artwork" />
             </div>
-            <div class="lyrics-overlay">
-              <div id="lyricsCurrent" class="lyrics-line-current"></div>
-              <div id="lyricsNext" class="lyrics-line-next"></div>
+            <div class="lyrics-overlay" aria-live="polite">
+              <div class="lyrics-line-current" id="lyricsCurrent"></div>
+              <div class="lyrics-line-next" id="lyricsNext"></div>
             </div>
           </div>
 
-          <div class="status-bar">
+          <div class="status-bar" role="status" aria-live="polite">
             <div class="status-group">
-              <div id="statusDot" class="status-dot" aria-hidden="true"></div>
-              <span id="statusText">Idle · No audio loaded</span>
+              <span class="status-dot" id="statusDot" aria-hidden="true"></span>
+              <span class="status-chip" id="statusText"></span>
             </div>
             <div class="status-group">
-              <span id="timeLabel" class="status-chip">00:00 / 00:00</span>
-              <span id="sampleRateLabel" class="status-chip">Sample rate: —</span>
+              <span id="timeLabel"></span>
+              <span id="sampleRateLabel"></span>
             </div>
           </div>
         </section>
 
-        <!-- RIGHT: CONTROLS -->
-        <section class="controls-panel" aria-label="Control panel">
-          <h2>🎚️ Controls & Setup</h2>
+        <section class="controls-panel" aria-label="Controls">
+          <h2 id="controlsTitle">⚙️ Control Panel</h2>
 
-          <!-- Audio file -->
           <div class="control-row">
             <div class="control-label">
-              <span id="audioLabel">Audio file (WAV/MP3/FLAC) 🎵</span>
-              <span class="hint" id="audioHint">High sample-rate ready</span>
+              <span id="audioLabel"></span>
+              <span class="hint" id="audioHint"></span>
             </div>
-            <div class="file-input-wrapper">
-              <input type="file" id="audioFileInput" accept="audio/*" />
+            <div class="file-input-wrapper" role="group" aria-labelledby="audioLabel audioHint">
+              <input type="file" id="audioFileInput" accept="audio/*" aria-label="Choose audio file" />
               <button type="button" class="button" id="audioFileButton">
-                <span id="audioButton">⬆️ Load Audio</span>
+                <span id="audioButton"></span>
               </button>
-              <span id="audioFileName" class="small-text">No file selected</span>
+              <span id="audioFileName" class="small-text" aria-live="polite"></span>
             </div>
           </div>
 
-          <!-- Background image -->
           <div class="control-row">
             <div class="control-label">
-              <span id="imageLabel">Background artwork 🖼️</span>
-              <span class="hint" id="imageHint">Static cover or looping art</span>
+              <span id="imageLabel"></span>
+              <span class="hint" id="imageHint"></span>
             </div>
-            <div class="file-input-wrapper">
-              <input type="file" id="imageFileInput" accept="image/*" />
+            <div class="file-input-wrapper" role="group" aria-labelledby="imageLabel imageHint">
+              <input type="file" id="imageFileInput" accept="image/*" aria-label="Choose background image" />
               <button type="button" class="button secondary" id="imageFileButton">
-                <span id="imageButton">🌌 Load Image</span>
+                <span id="imageButton"></span>
               </button>
-              <span id="imageFileName" class="small-text">No image selected</span>
+              <span id="imageFileName" class="small-text" aria-live="polite"></span>
             </div>
           </div>
 
-          <!-- Theme & Bars -->
-          <div class="control-row">
+          <div class="control-row" aria-labelledby="themeLabel barsLabel">
             <div class="split-row">
               <div>
                 <div class="control-label">
-                  <span id="themeLabel">Visualizer theme ✨</span>
+                  <span id="themeLabel"></span>
                 </div>
-                <select id="themeSelect">
-                  <option value="ultra-spark">Ultra SparKing Ascension</option>
-                  <option value="cosmic-holy">Cosmic Holy Creation</option>
-                  <option value="neon-club">Neon DJ Pulse</option>
-                  <option value="matrix-cyber">Cyber Matrix Code</option>
-                </select>
+                <label class="sr-only" for="themeSelect">Visualizer theme</label>
+                <select id="themeSelect" aria-describedby="themeLabel"></select>
               </div>
               <div>
                 <div class="control-label">
-                  <span id="barsLabel">Bars count 🔢</span>
-                  <span class="hint" id="barsHint">16 – 160</span>
+                  <span id="barsLabel"></span>
+                  <span class="hint" id="barsHint"></span>
                 </div>
-                <input type="number" id="barsCountInput" min="16" max="160" step="8" value="72" />
+                <label class="sr-only" for="barsCountInput">Bar count</label>
+                <input type="number" id="barsCountInput" min="16" max="160" step="8" value="72" aria-describedby="barsHint" />
               </div>
             </div>
-            <div class="chips-row">
-              <span class="mini-chip" id="chipFft">FFT-based</span>
-              <span class="mini-chip" id="chipSmooth">Smoothing</span>
-              <span class="mini-chip" id="chip4k">4K Canvas Ready</span>
+            <div class="chips-row" role="list" aria-label="Visualizer capabilities">
+              <span class="mini-chip" id="chipFft" role="listitem"></span>
+              <span class="mini-chip" id="chipSmooth" role="listitem"></span>
+              <span class="mini-chip" id="chip4k" role="listitem"></span>
             </div>
           </div>
 
-          <!-- Lyrics -->
           <div class="control-row">
             <div class="control-label">
-              <span id="lyricsLabel">Lyrics with timing 🎤</span>
-              <span class="hint" id="lyricsHint">Format: time|text (one line per bar)</span>
+              <span id="lyricsLabel"></span>
+              <span class="hint" id="lyricsHint"></span>
             </div>
-            <textarea id="lyricsInput" placeholder="Examples:
-0.0|In the beginning of the spark
-4.2|Light breaks out of the dark
-8.1|AnLoMinus riding every bar
-"></textarea>
-            <div class="small-text" id="timeHint">
-              ⏱️ Time can be in seconds (e.g. <code>12.5</code>) or <code>mm:ss</code> (e.g. <code>01:23</code>).
-            </div>
+            <label class="sr-only" for="lyricsInput">Lyrics input</label>
+            <textarea id="lyricsInput" aria-describedby="lyricsHint timeHint"></textarea>
+            <div class="small-text" id="timeHint"></div>
           </div>
 
-          <!-- Transport -->
           <div class="control-row">
             <div class="control-label">
-              <span id="transportLabel">Transport & preview 🔁</span>
+              <span id="transportLabel"></span>
             </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <div class="control-buttons" role="group" aria-label="Playback controls">
               <button type="button" class="button" id="playButton">
-                <span id="playButtonLabel">▶️ Play / Resume</span>
+                <span id="playButtonLabel"></span>
               </button>
               <button type="button" class="button secondary icon-only" id="pauseButton">
-                <span id="pauseButtonLabel">⏸️</span>
+                <span id="pauseButtonLabel"></span>
               </button>
               <button type="button" class="button secondary icon-only" id="stopButton">
-                <span id="stopButtonLabel">⏹️</span>
+                <span id="stopButtonLabel"></span>
               </button>
               <button type="button" class="button secondary" id="reloadLyricsButton">
-                <span id="parseButtonLabel">🔄 Parse Lyrics</span>
+                <span id="parseButtonLabel"></span>
               </button>
             </div>
-            <div class="small-text" id="transportTip">
-              Tip: load the audio, paste your lyrics, set a theme, then hit Play – bars + text will sync in real time.
-            </div>
+            <div class="small-text" id="transportTip"></div>
           </div>
         </section>
-      </div>
+      </main>
 
       <footer class="app-footer">
         <div id="footerLeft">
           <span aria-hidden="true">©</span>
           <span id="yearSpan"></span>
-          <span id="footerLeftText"> VideoSpark · Crafted for HacKing-DJ · All rights reserved.</span>
+          <span id="footerLeftText"></span>
         </div>
         <div class="footer-right">
-          <span id="footerBy">By AnLoMinus (SparKing Leon Yaakobov)</span>
+          <span id="footerBy"></span>
           <a class="footer-link" href="https://github.com/AnLoMinus" target="_blank" rel="noopener noreferrer">
-            <span id="footerLink">GitHub Profile</span>
+            <span id="footerLink"></span>
           </a>
         </div>
       </footer>
     </div>
   </div>
 
-  <script>
-    (function () {
-      const APP_VERSION = "v0.2.0";
-
-      const audioFileInput = document.getElementById("audioFileInput");
-      const audioFileButton = document.getElementById("audioFileButton");
-      const audioFileName = document.getElementById("audioFileName");
-
-      const imageFileInput = document.getElementById("imageFileInput");
-      const imageFileButton = document.getElementById("imageFileButton");
-      const imageFileName = document.getElementById("imageFileName");
-      const bgImagePreview = document.getElementById("bgImagePreview");
-
-      const themeSelect = document.getElementById("themeSelect");
-      const currentThemeLabel = document.getElementById("currentThemeLabel");
-      const barsCountInput = document.getElementById("barsCountInput");
-
-      const lyricsInput = document.getElementById("lyricsInput");
-      const reloadLyricsButton = document.getElementById("reloadLyricsButton");
-      const lyricsCurrentEl = document.getElementById("lyricsCurrent");
-      const lyricsNextEl = document.getElementById("lyricsNext");
-
-      const playButton = document.getElementById("playButton");
-      const pauseButton = document.getElementById("pauseButton");
-      const stopButton = document.getElementById("stopButton");
-
-      const statusDot = document.getElementById("statusDot");
-      const statusText = document.getElementById("statusText");
-      const timeLabel = document.getElementById("timeLabel");
-      const sampleRateLabel = document.getElementById("sampleRateLabel");
-      const yearSpan = document.getElementById("yearSpan");
-
-      const brandPill = document.getElementById("brandPill");
-      const brandSub = document.getElementById("brandSub");
-      const badgeMode = document.getElementById("badgeMode");
-      const badgeSync = document.getElementById("badgeSync");
-      const badgeAuthor = document.getElementById("badgeAuthor");
-      const versionTag = document.getElementById("versionTag");
-      const languageSelect = document.getElementById("languageSelect");
-
-      const visualizerTitle = document.getElementById("visualizerTitle");
-      const visualizerSub = document.getElementById("visualizerSub");
-      const themeIndicatorLabel = document.getElementById("themeIndicatorLabel");
-      const displaySizeLabel = document.getElementById("displaySizeLabel");
-      const displaySizeSelect = document.getElementById("displaySizeSelect");
-      const visualizerStage = document.querySelector(".visualizer-stage");
-
-      const audioLabel = document.getElementById("audioLabel");
-      const audioHint = document.getElementById("audioHint");
-      const audioButtonLabel = document.getElementById("audioButton");
-
-      const imageLabel = document.getElementById("imageLabel");
-      const imageHint = document.getElementById("imageHint");
-      const imageButtonLabel = document.getElementById("imageButton");
-
-      const themeLabel = document.getElementById("themeLabel");
-      const barsLabel = document.getElementById("barsLabel");
-      const barsHint = document.getElementById("barsHint");
-      const chipFft = document.getElementById("chipFft");
-      const chipSmooth = document.getElementById("chipSmooth");
-      const chip4k = document.getElementById("chip4k");
-
-      const lyricsLabel = document.getElementById("lyricsLabel");
-      const lyricsHint = document.getElementById("lyricsHint");
-      const timeHint = document.getElementById("timeHint");
-
-      const transportLabel = document.getElementById("transportLabel");
-      const playButtonLabel = document.getElementById("playButtonLabel");
-      const pauseButtonLabel = document.getElementById("pauseButtonLabel");
-      const stopButtonLabel = document.getElementById("stopButtonLabel");
-      const parseButtonLabel = document.getElementById("parseButtonLabel");
-      const transportTip = document.getElementById("transportTip");
-
-      const footerLeft = document.getElementById("footerLeft");
-      const footerLeftText = document.getElementById("footerLeftText");
-      const footerBy = document.getElementById("footerBy");
-      const footerLink = document.getElementById("footerLink");
-
-      const canvas = document.getElementById("visualizerCanvas");
-      const ctx = canvas.getContext("2d");
-
-      const translations = {
-        en: {
-          versionLabel: "Version {version}",
-          brandPill: "Audio · Visual · Lyrics",
-          brandSub: "Reactive equalizer · Cosmic themes · Lyrics-on-beat",
-          badgeMode: "HacKing-DJ Mode",
-          badgeSync: "Ultra Visual Sync",
-          badgeAuthor: "Made by AnLoMinus",
-          visualizerTitle: "🎛️ Live Visualizer",
-          visualizerSub: "Drop your track · Watch the bars ignite",
-          themeIndicator: "Theme:",
-          displaySizeLabel: "View:",
-          displaySizeOptions: {
-            full: "Full view",
-            half: "Half view",
-            quarter: "Quarter view",
-            small: "Mini view"
-          },
-          overlayDefault: "Load audio · Add lyrics · Hit Play",
-          overlayNextHint: "",
-          sampleRatePrefix: "Sample rate: ",
-          sampleRateUnknown: "Sample rate: —",
-          statusIdleNoAudio: "Idle · No audio loaded",
-          statusPlaying: "Playing · Visualizer active",
-          statusPaused: "Paused",
-          statusStopped: "Stopped · Ready",
-          statusFinished: "Finished · Ready to replay",
-          statusLoaded: "Audio loaded · Ready to play",
-          statusLoadFirst: "Load audio first",
-          statusUnablePlay: "Unable to play (interaction required)",
-          audioLabel: "Audio file (WAV/MP3/FLAC) 🎵",
-          audioHint: "High sample-rate ready",
-          audioButton: "⬆️ Load Audio",
-          audioNone: "No file selected",
-          imageLabel: "Background artwork 🖼️",
-          imageHint: "Static cover or looping art",
-          imageButton: "🌌 Load Image",
-          imageNone: "No image selected",
-          themeLabel: "Visualizer theme ✨",
-          barsLabel: "Bars count 🔢",
-          barsHint: "16 – 160",
-          chipFft: "FFT-based",
-          chipSmooth: "Smoothing",
-          chip4k: "4K Canvas Ready",
-          lyricsLabel: "Lyrics with timing 🎤",
-          lyricsHint: "Format: time|text (one line per bar)",
-          lyricsPlaceholder: "Examples:\n0.0|In the beginning of the spark\n4.2|Light breaks out of the dark\n8.1|AnLoMinus riding every bar\n",
-          timeHint: "⏱️ Time can be in seconds (e.g. <code>12.5</code>) or <code>mm:ss</code> (e.g. <code>01:23</code>).",
-          transportLabel: "Transport & preview 🔁",
-          playButton: "▶️ Play / Resume",
-          pauseButton: "⏸️",
-          stopButton: "⏹️",
-          parseButton: "🔄 Parse Lyrics",
-          transportTip: "Tip: load the audio, paste your lyrics, set a theme, then hit Play – bars + text will sync in real time.",
-          footerLeftText: " VideoSpark · Crafted for HacKing-DJ · All rights reserved.",
-          footerBy: "By AnLoMinus (SparKing Leon Yaakobov)",
-          footerLink: "GitHub Profile",
-          lyricsNone: "Lyrics: none parsed (check format)",
-          lyricsReady: "Lyrics ready · {count} lines",
-          lyricsReadyNext: "They will appear in sync while playing.",
-          themeOptions: {
-            "ultra-spark": "Ultra SparKing Ascension",
-            "cosmic-holy": "Cosmic Holy Creation",
-            "neon-club": "Neon DJ Pulse",
-            "matrix-cyber": "Cyber Matrix Code"
-          }
-        },
-        he: {
-          versionLabel: "גרסה {version}",
-          brandPill: "אודיו · ויזואל · מילים",
-          brandSub: "אקולייזר מגיב · תמות קוסמיות · מילים על הביט",
-          badgeMode: "מצב HacKing-DJ",
-          badgeSync: "סנכרון ויזואלי אולטרה",
-          badgeAuthor: "נוצר ע\"י AnLoMinus",
-          visualizerTitle: "🎛️ ויזואלייזר חי",
-          visualizerSub: "זרקו קובץ – תראו את הבר נצנץ",
-          themeIndicator: "ערכת נושא:",
-          displaySizeLabel: "תצוגה:",
-          displaySizeOptions: {
-            full: "מסך מלא",
-            half: "חצי מסך",
-            quarter: "רבע מסך",
-            small: "מסך קטן"
-          },
-          overlayDefault: "טענו אודיו · הוסיפו מילים · לחצו פליי",
-          overlayNextHint: "",
-          sampleRatePrefix: "קצב דגימה: ",
-          sampleRateUnknown: "קצב דגימה: —",
-          statusIdleNoAudio: "ממתין · אין אודיו",
-          statusPlaying: "מנגן · ויזואלייזר פעיל",
-          statusPaused: "מושהה",
-          statusStopped: "נעצר · מוכן",
-          statusFinished: "הסתיים · מוכן להשמעה חוזרת",
-          statusLoaded: "אודיו נטען · מוכן לניגון",
-          statusLoadFirst: "ראשית טענו אודיו",
-          statusUnablePlay: "לא ניתן לנגן (נדרשת אינטראקציה)",
-          audioLabel: "קובץ אודיו (WAV/MP3/FLAC) 🎵",
-          audioHint: "מוכן לאיכות גבוהה",
-          audioButton: "⬆️ טעינת אודיו",
-          audioNone: "לא נבחר קובץ",
-          imageLabel: "תמונת רקע 🖼️",
-          imageHint: "קאבר סטטי או אמנות לולאתית",
-          imageButton: "🌌 טעינת תמונה",
-          imageNone: "לא נבחרה תמונה",
-          themeLabel: "ערכת נושא ✨",
-          barsLabel: "מספר ברים 🔢",
-          barsHint: "16 – 160",
-          chipFft: "מבוסס FFT",
-          chipSmooth: "החלקה",
-          chip4k: "Canvas מוכן ל-4K",
-          lyricsLabel: "מילים עם תזמון 🎤",
-          lyricsHint: "פורמט: זמן|טקסט (שורה לכל בר)",
-          lyricsPlaceholder: "דוגמאות:\n0.0|בראשית של הניצוץ\n4.2|אור פורץ מתוך החושך\n8.1|AnLoMinus רוכב על כל בר\n",
-          timeHint: "⏱️ ניתן לכתוב שניות (לדוגמה <code>12.5</code>) או <code>דק:שניות</code> (לדוגמה <code>01:23</code>).",
-          transportLabel: "שליטה ותצוגה 🔁",
-          playButton: "▶️ ניגון / המשך",
-          pauseButton: "⏸️",
-          stopButton: "⏹️",
-          parseButton: "🔄 פירוק מילים",
-          transportTip: "טענו אודיו, הדביקו מילים, בחרו ערכה ואז Play – הבר והטקסט יסתנכרנו בזמן אמת.",
-          footerLeftText: " VideoSpark · נוצר עבור HacKing-DJ · כל הזכויות שמורות.",
-          footerBy: "מאת AnLoMinus (SparKing Leon Yaakobov)",
-          footerLink: "GitHub פרופיל",
-          lyricsNone: "מילים: לא נותחו (בדקו את הפורמט)",
-          lyricsReady: "המילים מוכנות · {count} שורות",
-          lyricsReadyNext: "הטקסט יופיע מסונכרן בזמן ניגון.",
-          themeOptions: {
-            "ultra-spark": "Ultra SparKing Ascension",
-            "cosmic-holy": "Cosmic Holy Creation",
-            "neon-club": "Neon DJ Pulse",
-            "matrix-cyber": "Cyber Matrix Code"
-          }
-        }
-      };
-
-      let currentLang = "en";
-
-      let audioCtx = null;
-      let analyser = null;
-      let sourceNode = null;
-      let sourceElement = null;
-      let dataArray = null;
-      let bufferLength = 0;
-      let audioElement = null;
-      let audioUrl = null;
-      let animationId = null;
-      let lyricsData = [];
-      let lastLyricsIndex = -1;
-      let lastSampleRate = null;
-
-      function t(key, params) {
-        const langPack = translations[currentLang] || translations.en;
-        let value = langPack[key];
-        if (value === undefined) value = translations.en[key];
-        if (typeof value === "function") return value(params);
-        if (typeof value === "string" && params && value.indexOf("{") !== -1) {
-          return value.replace(/\{(\w+)\}/g, function (_, token) {
-            return params && params[token] !== undefined ? params[token] : "";
-          });
-        }
-        return value || "";
-      }
-
-      function getThemeLabel(themeKey) {
-        const map = (translations[currentLang] || translations.en).themeOptions || translations.en.themeOptions;
-        return map[themeKey] || translations.en.themeOptions[themeKey] || themeKey;
-      }
-
-      function updateSampleRateLabel() {
-        if (audioCtx) {
-          lastSampleRate = Math.round(audioCtx.sampleRate);
-          sampleRateLabel.textContent = t("sampleRatePrefix") + lastSampleRate + " Hz";
-        } else {
-          sampleRateLabel.textContent = t("sampleRateUnknown");
-        }
-      }
-
-      function setDefaultLyricsPrompt() {
-        lyricsCurrentEl.textContent = t("overlayDefault");
-        lyricsNextEl.textContent = t("overlayNextHint");
-      }
-
-      function applyLanguage() {
-        document.documentElement.lang = currentLang === "he" ? "he" : "en";
-        document.body.dir = currentLang === "he" ? "rtl" : "ltr";
-
-        versionTag.textContent = t("versionLabel", { version: APP_VERSION });
-        brandPill.textContent = t("brandPill");
-        brandSub.textContent = t("brandSub");
-        badgeMode.textContent = t("badgeMode");
-        badgeSync.textContent = t("badgeSync");
-        badgeAuthor.textContent = t("badgeAuthor");
-
-        visualizerTitle.textContent = t("visualizerTitle");
-        visualizerSub.textContent = t("visualizerSub");
-        themeIndicatorLabel.textContent = t("themeIndicator");
-        displaySizeLabel.textContent = t("displaySizeLabel");
-
-        audioLabel.textContent = t("audioLabel");
-        audioHint.textContent = t("audioHint");
-        audioButtonLabel.textContent = t("audioButton");
-
-        imageLabel.textContent = t("imageLabel");
-        imageHint.textContent = t("imageHint");
-        imageButtonLabel.textContent = t("imageButton");
-
-        themeLabel.textContent = t("themeLabel");
-        barsLabel.textContent = t("barsLabel");
-        barsHint.textContent = t("barsHint");
-        chipFft.textContent = t("chipFft");
-        chipSmooth.textContent = t("chipSmooth");
-        chip4k.textContent = t("chip4k");
-
-        lyricsLabel.textContent = t("lyricsLabel");
-        lyricsHint.textContent = t("lyricsHint");
-        lyricsInput.placeholder = t("lyricsPlaceholder");
-        timeHint.innerHTML = t("timeHint");
-
-        transportLabel.textContent = t("transportLabel");
-        playButtonLabel.textContent = t("playButton");
-        pauseButtonLabel.textContent = t("pauseButton");
-        stopButtonLabel.textContent = t("stopButton");
-        parseButtonLabel.textContent = t("parseButton");
-        transportTip.textContent = t("transportTip");
-
-        footerLeftText.textContent = t("footerLeftText");
-        footerBy.textContent = t("footerBy");
-        footerLink.textContent = t("footerLink");
-
-        Array.from(themeSelect.options).forEach(function (option) {
-          option.textContent = getThemeLabel(option.value);
-        });
-        Array.from(displaySizeSelect.options).forEach(function (option) {
-          const viewLabels = (translations[currentLang] || translations.en).displaySizeOptions || translations.en.displaySizeOptions;
-          option.textContent = viewLabels[option.value] || option.textContent;
-        });
-        const selectedOption = themeSelect.value;
-        currentThemeLabel.textContent = getThemeLabel(selectedOption);
-
-        if (!audioFileInput.files || !audioFileInput.files.length) {
-          audioFileName.textContent = t("audioNone");
-        }
-        if (!imageFileInput.files || !imageFileInput.files.length) {
-          imageFileName.textContent = t("imageNone");
-        }
-
-        updateSampleRateLabel();
-
-        if (!lyricsData.length) {
-          setDefaultLyricsPrompt();
-        }
-
-        if (!audioElement) {
-          setStatus(false, t("statusIdleNoAudio"));
-        }
-      }
-
-      yearSpan.textContent = new Date().getFullYear().toString();
-
-      languageSelect.value = currentLang;
-      applyLanguage();
-      applyDisplaySize(displaySizeSelect.value || "half");
-
-      function resizeCanvas() {
-        const rect = canvas.parentElement.getBoundingClientRect();
-        // Higher internal resolution for sharper lines
-        const scale = window.devicePixelRatio || 1;
-        canvas.width = Math.floor(rect.width * scale);
-        canvas.height = Math.floor(rect.height * scale);
-        ctx.setTransform(scale, 0, 0, scale, 0, 0);
-      }
-
-      function applyDisplaySize(sizeKey) {
-        const allowed = ["full", "half", "quarter", "small"];
-        const chosen = allowed.indexOf(sizeKey) !== -1 ? sizeKey : "half";
-        allowed.forEach(function (key) {
-          visualizerStage.classList.remove("size-" + key);
-        });
-        visualizerStage.classList.add("size-" + chosen);
-        if (displaySizeSelect.value !== chosen) {
-          displaySizeSelect.value = chosen;
-        }
-        resizeCanvas();
-      }
-
-      window.addEventListener("resize", resizeCanvas);
-      resizeCanvas();
-
-      function setStatus(isPlaying, message) {
-        if (isPlaying) {
-          statusDot.classList.add("playing");
-          statusText.textContent = message || t("statusPlaying");
-        } else {
-          statusDot.classList.remove("playing");
-          statusText.textContent = message || t("statusIdleNoAudio");
-        }
-      }
-
-      function formatTime(t) {
-        if (!isFinite(t) || t < 0) t = 0;
-        const minutes = Math.floor(t / 60);
-        const seconds = Math.floor(t % 60);
-        const mm = minutes.toString().padStart(2, "0");
-        const ss = seconds.toString().padStart(2, "0");
-        return mm + ":" + ss;
-      }
-
-      function updateTimeLabel() {
-        if (!audioElement) {
-          timeLabel.textContent = "00:00 / 00:00";
-          return;
-        }
-        const cur = formatTime(audioElement.currentTime || 0);
-        const dur = isFinite(audioElement.duration) ? formatTime(audioElement.duration) : "00:00";
-        timeLabel.textContent = cur + " / " + dur;
-      }
-
-      function parseTimeToken(token) {
-        token = token.trim();
-        if (!token) return null;
-
-        // mm:ss or hh:mm:ss
-        if (token.indexOf(":") !== -1) {
-          const parts = token.split(":").map(function (p) { return p.trim(); });
-          if (parts.some(function (p) { return p === ""; })) return null;
-          let seconds = 0;
-          if (parts.length === 2) {
-            const m = Number(parts[0]);
-            const s = Number(parts[1]);
-            if (!isFinite(m) || !isFinite(s)) return null;
-            seconds = m * 60 + s;
-          } else if (parts.length === 3) {
-            const h = Number(parts[0]);
-            const m = Number(parts[1]);
-            const s = Number(parts[2]);
-            if (!isFinite(h) || !isFinite(m) || !isFinite(s)) return null;
-            seconds = h * 3600 + m * 60 + s;
-          } else {
-            return null;
-          }
-          return seconds;
-        }
-
-        const n = Number(token);
-        if (!isFinite(n)) return null;
-        return n;
-      }
-
-      function parseLyrics() {
-        const raw = lyricsInput.value || "";
-        const lines = raw.split(/\r?\n/);
-        const parsed = [];
-
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i].trim();
-          if (!line) continue;
-          const parts = line.split("|");
-          if (parts.length < 2) continue;
-          const timeToken = parts[0];
-          const text = parts.slice(1).join("|").trim();
-          if (!text) continue;
-          const timeSeconds = parseTimeToken(timeToken);
-          if (timeSeconds === null) continue;
-          parsed.push({ time: timeSeconds, text: text });
-        }
-
-        parsed.sort(function (a, b) {
-          return a.time - b.time;
-        });
-
-        lyricsData = parsed;
-        lastLyricsIndex = -1;
-
-        if (lyricsData.length === 0) {
-          lyricsCurrentEl.textContent = t("lyricsNone");
-          lyricsNextEl.textContent = "";
-        } else {
-          lyricsCurrentEl.textContent = t("lyricsReady", { count: lyricsData.length });
-          lyricsNextEl.textContent = t("lyricsReadyNext");
-        }
-      }
-
-      parseLyrics();
-
-      function updateLyricsForTime(currentTime) {
-        if (!lyricsData.length) return;
-
-        let idx = lastLyricsIndex;
-        if (idx < 0 || currentTime < lyricsData[idx].time || idx >= lyricsData.length - 1) {
-          idx = 0;
-        }
-
-        for (let i = idx; i < lyricsData.length; i++) {
-          const entry = lyricsData[i];
-          const nextEntry = lyricsData[i + 1];
-          if (currentTime >= entry.time && (!nextEntry || currentTime < nextEntry.time)) {
-            idx = i;
-            break;
-          }
-        }
-
-        if (idx !== lastLyricsIndex) {
-          lastLyricsIndex = idx;
-          const current = lyricsData[idx];
-          const next = lyricsData[idx + 1];
-          lyricsCurrentEl.textContent = current.text;
-          lyricsNextEl.textContent = next ? next.text : "";
-        }
-      }
-
-      function getThemeStyle(themeKey, valueRatio, barIndex, barCount) {
-        const v = Math.max(0, Math.min(1, valueRatio));
-        const t = themeKey;
-
-        if (t === "cosmic-holy") {
-          const r = Math.round(255 * (0.6 + 0.4 * v));
-          const g = Math.round(255 * (0.8));
-          const b = Math.round(210 * v);
-          return "rgba(" + r + "," + g + "," + b + "," + (0.75 + 0.25 * v) + ")";
-        }
-
-        if (t === "neon-club") {
-          const hue = 180 + (barIndex / Math.max(1, barCount)) * 120;
-          const sat = 70 + 15 * v;
-          const light = 40 + 20 * v;
-          return "hsl(" + hue + "," + sat + "%," + light + "%)";
-        }
-
-        if (t === "matrix-cyber") {
-          const g = Math.round(190 + 65 * v);
-          return "rgba(140," + g + ",160," + (0.65 + 0.35 * v) + ")";
-        }
-
-        // ultra-spark (default)
-        const r = Math.round(255 * (0.7 + 0.3 * v));
-        const g = Math.round(140 + 90 * v);
-        const b = Math.round(60 + 120 * v);
-        return "rgba(" + r + "," + g + "," + b + "," + (0.75 + 0.25 * v) + ")";
-      }
-
-      function drawFrame() {
-        if (!analyser || !dataArray) return;
-
-        animationId = requestAnimationFrame(drawFrame);
-
-        analyser.getByteFrequencyData(dataArray);
-
-        const width = canvas.width;
-        const height = canvas.height;
-        ctx.clearRect(0, 0, width, height);
-
-        const barsCount = Math.max(16, Math.min(160, Number(barsCountInput.value) || 72));
-        const binStep = Math.max(1, Math.floor(bufferLength / barsCount));
-
-        const themeKey = themeSelect.value;
-
-        // subtle glow background
-        const grad = ctx.createRadialGradient(
-          width * 0.5,
-          height * 0.7,
-          height * 0.05,
-          width * 0.5,
-          height,
-          height * 0.9
-        );
-        grad.addColorStop(0, "rgba(8, 8, 28, 0.1)");
-        grad.addColorStop(1, "rgba(0, 0, 0, 0.85)");
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, width, height);
-
-        const barWidth = (width * 0.88) / barsCount;
-        const baseX = width * 0.06;
-        const baseline = height * 0.78;
-        const maxBarHeight = height * 0.55;
-
-        for (let i = 0; i < barsCount; i++) {
-          const binIndex = i * binStep;
-          let sum = 0;
-          let count = 0;
-          for (let j = 0; j < binStep && binIndex + j < bufferLength; j++) {
-            sum += dataArray[binIndex + j];
-            count++;
-          }
-          const avg = count ? sum / count : 0;
-          const valueRatio = avg / 255;
-          const eased = Math.pow(valueRatio, 1.4);
-
-          const barHeight = eased * maxBarHeight;
-          const x = baseX + i * barWidth;
-          const y = baseline - barHeight;
-
-          const color = getThemeStyle(themeKey, eased, i, barsCount);
-          ctx.fillStyle = color;
-          const radius = barWidth * 0.4;
-          const w = barWidth * 0.75;
-          const h = barHeight;
-
-          const rx = x + (barWidth - w) / 2;
-          const ry = y;
-
-          // Rounded rect
-          const r = Math.min(radius, w / 2, h / 2);
-          ctx.beginPath();
-          ctx.moveTo(rx + r, ry);
-          ctx.lineTo(rx + w - r, ry);
-          ctx.quadraticCurveTo(rx + w, ry, rx + w, ry + r);
-          ctx.lineTo(rx + w, ry + h - r);
-          ctx.quadraticCurveTo(rx + w, ry + h, rx + w - r, ry + h);
-          ctx.lineTo(rx + r, ry + h);
-          ctx.quadraticCurveTo(rx, ry + h, rx, ry + h - r);
-          ctx.lineTo(rx, ry + r);
-          ctx.quadraticCurveTo(rx, ry, rx + r, ry);
-          ctx.closePath();
-          ctx.fill();
-
-          // small highlight on top
-          if (h > 6) {
-            const topHeight = Math.max(2, h * 0.12);
-            ctx.fillStyle = "rgba(255,255,255,0.55)";
-            ctx.fillRect(rx + w * 0.12, ry + 1.5, w * 0.76, topHeight);
-          }
-        }
-
-        // baseline glow
-        ctx.beginPath();
-        ctx.moveTo(baseX, baseline);
-        ctx.lineTo(width - baseX, baseline);
-        ctx.strokeStyle = "rgba(255,255,255,0.28)";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        if (audioElement) {
-          updateLyricsForTime(audioElement.currentTime || 0);
-          updateTimeLabel();
-        }
-      }
-
-      function stopAnimation() {
-        if (animationId !== null) {
-          cancelAnimationFrame(animationId);
-          animationId = null;
-        }
-      }
-
-      function setupAudioContext() {
-        if (!audioCtx) {
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          updateSampleRateLabel();
-        }
-        if (!analyser) {
-          analyser = audioCtx.createAnalyser();
-          analyser.fftSize = 2048;
-          analyser.smoothingTimeConstant = 0.78;
-          bufferLength = analyser.frequencyBinCount;
-          dataArray = new Uint8Array(bufferLength);
-        }
-      }
-
-      function connectSource() {
-        if (!audioCtx || !audioElement) return;
-
-        if (!sourceNode || sourceElement !== audioElement) {
-          if (sourceNode) {
-            try {
-              sourceNode.disconnect();
-            } catch (e) {}
-          }
-
-          sourceNode = audioCtx.createMediaElementSource(audioElement);
-          sourceElement = audioElement;
-          sourceNode.connect(analyser);
-        } else {
-          try {
-            sourceNode.connect(analyser);
-          } catch (e) {}
-        }
-
-        try {
-          analyser.disconnect();
-        } catch (e) {}
-        analyser.connect(audioCtx.destination);
-      }
-
-      function loadAudioFromFile(file) {
-        if (!file) return;
-        if (audioUrl) {
-          URL.revokeObjectURL(audioUrl);
-          audioUrl = null;
-        }
-
-        if (sourceNode) {
-          try {
-            sourceNode.disconnect();
-          } catch (e) {}
-          sourceNode = null;
-          sourceElement = null;
-        }
-
-        audioUrl = URL.createObjectURL(file);
-
-        if (audioElement) {
-          audioElement.pause();
-          audioElement.src = "";
-        }
-
-        audioElement = new Audio();
-        audioElement.src = audioUrl;
-        audioElement.crossOrigin = "anonymous";
-        audioElement.preload = "auto";
-
-        audioElement.addEventListener("ended", function () {
-          stopAnimation();
-          setStatus(false, t("statusFinished"));
-        });
-
-        audioElement.addEventListener("loadedmetadata", function () {
-          updateTimeLabel();
-        });
-
-        setupAudioContext();
-        connectSource();
-
-        setStatus(false, t("statusLoaded"));
-        updateTimeLabel();
-      }
-
-      function loadImageFromFile(file) {
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          bgImagePreview.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      }
-
-      parseLyrics();
-
-      audioFileButton.addEventListener("click", function () {
-        audioFileInput.click();
-      });
-
-      audioFileInput.addEventListener("change", function () {
-        const file = audioFileInput.files && audioFileInput.files[0];
-        if (!file) return;
-        audioFileName.textContent = file.name;
-        loadAudioFromFile(file);
-      });
-
-      imageFileButton.addEventListener("click", function () {
-        imageFileInput.click();
-      });
-
-      imageFileInput.addEventListener("change", function () {
-        const file = imageFileInput.files && imageFileInput.files[0];
-        if (!file) return;
-        imageFileName.textContent = file.name;
-        loadImageFromFile(file);
-      });
-
-      themeSelect.addEventListener("change", function () {
-        const label = themeSelect.options[themeSelect.selectedIndex].textContent;
-        currentThemeLabel.textContent = label;
-      });
-
-      displaySizeSelect.addEventListener("change", function () {
-        applyDisplaySize(displaySizeSelect.value);
-      });
-
-      reloadLyricsButton.addEventListener("click", function () {
-        parseLyrics();
-      });
-
-      languageSelect.addEventListener("change", function () {
-        currentLang = languageSelect.value;
-        applyLanguage();
-        parseLyrics();
-        updateTimeLabel();
-      });
-
-      playButton.addEventListener("click", function () {
-        if (!audioElement) {
-          setStatus(false, t("statusLoadFirst"));
-          return;
-        }
-        setupAudioContext();
-        connectSource();
-
-        audioCtx.resume().then(function () {
-          audioElement.play().then(function () {
-            setStatus(true, t("statusPlaying"));
-            stopAnimation();
-            drawFrame();
-          }).catch(function () {
-            setStatus(false, t("statusUnablePlay"));
-          });
-        });
-      });
-
-      pauseButton.addEventListener("click", function () {
-        if (!audioElement) return;
-        audioElement.pause();
-        setStatus(false, t("statusPaused"));
-      });
-
-      stopButton.addEventListener("click", function () {
-        if (!audioElement) return;
-        audioElement.pause();
-        audioElement.currentTime = 0;
-        stopAnimation();
-        setStatus(false, t("statusStopped"));
-        updateTimeLabel();
-      });
-
-      // initial status
-      setStatus(false, t("statusIdleNoAudio"));
-    })();
-  </script>
+  <script src="main.js" defer></script>
 </body>
 </html>
